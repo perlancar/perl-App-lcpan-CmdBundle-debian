@@ -8,8 +8,6 @@ use strict;
 use warnings;
 use Log::Any::IfLOG '$log';
 
-use Clone::Util qw(modclone);
-
 require App::lcpan;
 
 our %SPEC;
