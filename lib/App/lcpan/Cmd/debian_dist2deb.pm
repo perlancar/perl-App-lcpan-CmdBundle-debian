@@ -29,10 +29,6 @@ _
             summary => 'Check each distribution if its Debian package exists, using Dist::Util::Debian::dist_has_deb',
             schema => 'bool*',
         },
-        check_exists_on_cpan => {
-            summary => 'Check each distribution if it exists on the database',
-            schema => 'bool*',
-        },
         use_allpackages => {
             summary => 'Will be passed to Dist::Util::Debian::dist_has_deb',
             description => <<'_',
@@ -74,19 +70,21 @@ sub handle_cmd {
         push @rows, $row;
     }
 
-    if ($args{check_exists_on_cpan} || defined $args{exists_on_cpan}) {
-        push @fields, "exists_on_cpan";
+    {
+        push @fields, "dist_version";
         my $sth = $dbh->prepare(
-            "SELECT name,file_id FROM dist WHERE name IN (".
+            "SELECT name,version FROM dist WHERE is_latest AND name IN (".
                 join(",", map { $dbh->quote($_) } @{ $args{dists} }).")");
         $sth->execute;
-        my %exists;
+        my %versions;
         while (my $row = $sth->fetchrow_hashref) {
-            $exists{$row->{name}} = 1;
+            $versions{$row->{name}} = $row->{version};
         }
-        for (0..$#rows) { $rows[$_]{exists_on_cpan} = $exists{ $rows[$_]{dist} } ? 1:0 }
+        for (0..$#rows) {
+            $rows[$_]{dist_version} = $versions{$rows[$_]{dist}};
+        }
         if (defined $args{exists_on_cpan}) {
-            @rows = grep { !($_->{exists_on_cpan} xor $args{exists_on_cpan}) } @rows;
+            @rows = grep { !(defined $_->{dist_version} xor $args{exists_on_cpan}) } @rows;
         }
     }
 
