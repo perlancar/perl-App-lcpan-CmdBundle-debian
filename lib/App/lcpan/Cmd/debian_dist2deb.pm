@@ -126,3 +126,76 @@ sub handle_cmd {
 
 1;
 # ABSTRACT:
+
+=head1 SYNOPSIS
+
+Convert some distribution names to Debian package names (using simple rule of
+converting dist to lowercase and adding "lib" prefix and "-perl" suffix):
+
+ % cat dists.txt
+ HTTP-Tiny
+ App-lcpan
+ Data-Dmp
+ Foo
+
+ % lcpan debian-dist2deb < dists.txt
+ +-----------+-------------------+--------------+
+ | dist      | deb               | dist_version |
+ +-----------+-------------------+--------------+
+ | HTTP-Tiny | libhttp-tiny-perl | 0.070        |
+ | App-lcpan | libapp-lcpan-perl | 1.014        |
+ | Data-Dmp  | libdata-dmp-perl  | 0.22         |
+ | Foo       | libfoo-perl       |              |
+ +-----------+-------------------+--------------+
+
+Like the above, but also check that Debian package exists in the Debian
+repository (will show package version if exists, or undef if not exists):
+
+ % lcpan debian-dist2deb --check-exists-on-debian < dists.txt
+ +-----------+-------------------+--------------+-------------+
+ | dist      | deb               | dist_version | deb_version |
+ +-----------+-------------------+--------------+-------------+
+ | HTTP-Tiny | libhttp-tiny-perl | 0.070        | 0.070-1     |
+ | App-lcpan | libapp-lcpan-perl | 1.014        |             |
+ | Data-Dmp  | libdata-dmp-perl  | 0.22         | 0.21-1      |
+ | Foo       | libfoo-perl       |              |             |
+ +-----------+-------------------+--------------+-------------+
+
+Like the above, but download (and cache) allpackages.txt.gz first to speed up
+checking if you need to check many Debian packages:
+
+ % lcpan debian-dist2deb --check-exists-on-debian --use-allpackages
+
+Only show dists where the Debian package exists on Debian repo
+(C<--exists-on-debian> implicitly turns on C<--check-exists-on-debian>):
+
+ % lcpan debian-dist2deb --exists-on-debian --use-allpackages < dists.txt
+ +-----------+-------------------+--------------+-------------+
+ | dist      | deb               | dist_version | deb_version |
+ +-----------+-------------------+--------------+-------------+
+ | HTTP-Tiny | libhttp-tiny-perl | 0.070        | 0.070-1     |
+ | Data-Dmp  | libdata-dmp-perl  | 0.22         | 0.21-1      |
+ +-----------+-------------------+--------------+-------------+
+
+Reverse the filter (only show dists which do not have Debian packages):
+
+ % lcpan debian-dist2deb --no-exists-on-debian --use-allpackages < dists.txt
+ +-----------+-------------------+--------------+-------------+
+ | dist      | deb               | dist_version | deb_version |
+ +-----------+-------------------+--------------+-------------+
+ | App-lcpan | libapp-lcpan-perl | 1.014        |             |
+ | Foo       | libfoo-perl       |              |             |
+ +-----------+-------------------+--------------+-------------+
+
+Only show dists where the Debian package exists on Debian repo *and* the Debian
+package version is less than the dist version:
+
+ % lcpan debian-dist2deb --exists-on-debian --use-allpackages --needs-update < dists.txt
+ +-----------+-------------------+--------------+-------------+
+ | dist      | deb               | dist_version | deb_version |
+ +-----------+-------------------+--------------+-------------+
+ | Data-Dmp  | libdata-dmp-perl  | 0.22         | 0.21-1      |
+ +-----------+-------------------+--------------+-------------+
+
+
+=head1 DESCRIPTION
