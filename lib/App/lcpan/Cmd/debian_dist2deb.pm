@@ -39,6 +39,12 @@ packages. See <pm:Dist::Util::Debian> documentation for more details.
 _
             schema => 'bool*',
         },
+        exists => {
+            summary => 'Only output debs which exist on Debian repository',
+            'summary.alt.bool.neg' => 'Only output debs which do not exist on Debian repository',
+            schema => 'bool*',
+            tags => ['category:filtering'],
+        },
     },
 };
 sub handle_cmd {
@@ -58,13 +64,16 @@ sub handle_cmd {
         push @rows, $row;
     }
 
-    if ($args{check_exists}) {
+    if ($args{check_exists} || defined $args{exists}) {
         push @fields, "exists" if $args{check_exists};
         my $opts = {};
-        $opts->{use_allpackages} = 1 if $args{use_allpackages};
+        $opts->{use_allpackages} = 1 if $args{use_allpackages} // $args{exists};
 
         my @res = Dist::Util::Debian::deb_exists($opts, map {$_->{deb}} @rows);
         for (0..$#rows) { $rows[$_]{exists} = $res[$_] }
+        if (defined $args{exists}) {
+            @rows = grep { !($_->{exists} xor $args{exists}) } @rows;
+        }
     }
 
     [200, "OK", \@rows, {'table.fields' => \@fields}];
