@@ -25,8 +25,12 @@ _
     args => {
         %App::lcpan::common_args,
         %App::lcpan::dists_args,
-        check_exists => {
+        check_exists_on_debian => {
             summary => 'Check each distribution if its Debian package exists, using Dist::Util::Debian::dist_has_deb',
+            schema => 'bool*',
+        },
+        check_exists_on_cpan => {
+            summary => 'Check each distribution if it exists on the database',
             schema => 'bool*',
         },
         use_allpackages => {
@@ -39,9 +43,15 @@ packages. See <pm:Dist::Util::Debian> documentation for more details.
 _
             schema => 'bool*',
         },
-        exists => {
+        exists_on_debian => {
             summary => 'Only output debs which exist on Debian repository',
             'summary.alt.bool.neg' => 'Only output debs which do not exist on Debian repository',
+            schema => 'bool*',
+            tags => ['category:filtering'],
+        },
+        exists_on_cpan => {
+            summary => 'Only output debs which exist in database',
+            'summary.alt.bool.neg' => 'Only output debs which do not exist in database',
             schema => 'bool*',
             tags => ['category:filtering'],
         },
@@ -64,15 +74,31 @@ sub handle_cmd {
         push @rows, $row;
     }
 
-    if ($args{check_exists} || defined $args{exists}) {
-        push @fields, "exists" if $args{check_exists};
+    if ($args{check_exists_on_cpan} || defined $args{exists_on_cpan}) {
+        push @fields, "exists_on_cpan";
+        my $sth = $dbh->prepare(
+            "SELECT name,file_id FROM dist WHERE name IN (".
+                join(",", map { $dbh->quote($_) } @{ $args{dists} }).")");
+        $sth->execute;
+        my %exists;
+        while (my $row = $sth->fetchrow_hashref) {
+            $exists{$row->{name}} = 1;
+        }
+        for (0..$#rows) { $rows[$_]{exists_on_cpan} = $exists{ $rows[$_]{dist} } ? 1:0 }
+        if (defined $args{exists_on_cpan}) {
+            @rows = grep { !($_->{exists_on_cpan} xor $args{exists_on_cpan}) } @rows;
+        }
+    }
+
+    if ($args{check_exists_on_debian} || defined $args{exists_on_debian}) {
+        push @fields, "exists_on_debian";
         my $opts = {};
         $opts->{use_allpackages} = 1 if $args{use_allpackages} // $args{exists};
 
         my @res = Dist::Util::Debian::deb_exists($opts, map {$_->{deb}} @rows);
-        for (0..$#rows) { $rows[$_]{exists} = $res[$_] }
-        if (defined $args{exists}) {
-            @rows = grep { !($_->{exists} xor $args{exists}) } @rows;
+        for (0..$#rows) { $rows[$_]{exists_on_debian} = $res[$_] }
+        if (defined $args{exists_on_debian}) {
+            @rows = grep { !($_->{exists_on_debian} xor $args{exists_on_debian}) } @rows;
         }
     }
 
