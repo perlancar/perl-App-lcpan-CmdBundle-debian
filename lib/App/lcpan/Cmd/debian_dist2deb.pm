@@ -52,19 +52,21 @@ sub handle_cmd {
     my @rows;
     my @fields = qw(dist deb);
 
-    push @fields, "exists" if $args{check_exists};
-
-    my $opts = {};
-    $opts->{use_allpackages} = 1 if $args{use_allpackages};
-
     for my $dist (@{ $args{dists} }) {
         my $deb = Dist::Util::Debian::dist2deb($dist);
         my $row = {dist => $dist, deb => $deb};
-        if ($args{check_exists}) {
-            $row->{exists} = Dist::Util::Debian::deb_exists($opts, $deb);
-        }
         push @rows, $row;
     }
+
+    if ($args{check_exists}) {
+        push @fields, "exists" if $args{check_exists};
+        my $opts = {};
+        $opts->{use_allpackages} = 1 if $args{use_allpackages};
+
+        my @res = Dist::Util::Debian::deb_exists($opts, map {$_->{deb}} @rows);
+        for (0..$#rows) { $rows[$_]{exists} = $res[$_] }
+    }
+
     [200, "OK", \@rows, {'table.fields' => \@fields}];
 }
 
