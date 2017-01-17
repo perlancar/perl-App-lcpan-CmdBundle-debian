@@ -14,7 +14,7 @@ our %SPEC;
 
 $SPEC{handle_cmd} = {
     v => 1.1,
-    summary => 'Convert dist name to Debian package name',
+    summary => 'Show Debian package name/version for a dist',
     description => <<'_',
 
 This routine uses the simple rule of: converting the dist name to lowercase then
@@ -89,14 +89,14 @@ sub handle_cmd {
     }
 
     if ($args{check_exists_on_debian} || defined $args{exists_on_debian}) {
-        push @fields, "exists_on_debian";
+        push @fields, "deb_version";
         my $opts = {};
         $opts->{use_allpackages} = 1 if $args{use_allpackages} // $args{exists};
 
-        my @res = Dist::Util::Debian::deb_exists($opts, map {$_->{deb}} @rows);
-        for (0..$#rows) { $rows[$_]{exists_on_debian} = $res[$_] }
+        my @res = Dist::Util::Debian::deb_ver($opts, map {$_->{deb}} @rows);
+        for (0..$#rows) { $rows[$_]{deb_version} = $res[$_] }
         if (defined $args{exists_on_debian}) {
-            @rows = grep { !($_->{exists_on_debian} xor $args{exists_on_debian}) } @rows;
+            @rows = grep { !(defined $_->{deb_version} xor $args{exists_on_debian}) } @rows;
         }
     }
 
