@@ -51,6 +51,12 @@ _
             schema => 'bool*',
             tags => ['category:filtering'],
         },
+        needs_update => {
+            summary => 'Only output debs which has smaller version than its CPAN counterpart',
+            'summary.alt.bool.neg' => 'Only output debs which has the same version as its CPAN counterpart',
+            schema => 'bool*',
+            tags => ['category:filtering'],
+        },
     },
 };
 sub handle_cmd {
@@ -88,7 +94,7 @@ sub handle_cmd {
         }
     }
 
-    if ($args{check_exists_on_debian} || defined $args{exists_on_debian}) {
+    if ($args{check_exists_on_debian} || defined $args{exists_on_debian} || defined $args{needs_update}) {
         push @fields, "deb_version";
         my $opts = {};
         $opts->{use_allpackages} = 1 if $args{use_allpackages} // $args{exists};
@@ -97,6 +103,21 @@ sub handle_cmd {
         for (0..$#rows) { $rows[$_]{deb_version} = $res[$_] }
         if (defined $args{exists_on_debian}) {
             @rows = grep { !(defined $_->{deb_version} xor $args{exists_on_debian}) } @rows;
+        }
+        if (defined $args{needs_update}) {
+            my @frows;
+            for (@rows) {
+                my $v = $_->{deb_version};
+                next unless defined $v;
+                $v =~ s/-\d+$//;
+                if ($args{needs_update}) {
+                    next unless version->parse($v) <  version->parse($_->{dist_version});
+                } else {
+                    next unless version->parse($v) == version->parse($_->{dist_version});
+                }
+                push @frows, $_;
+            }
+            @rows = @frows;
         }
     }
 
