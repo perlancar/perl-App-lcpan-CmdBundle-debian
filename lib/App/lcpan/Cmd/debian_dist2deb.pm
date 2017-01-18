@@ -109,7 +109,7 @@ sub handle_cmd {
             for (@rows) {
                 my $v = $_->{deb_version};
                 next unless defined $v;
-                $v =~ s/-\d+$//;
+                $v =~ s/-.+$//;
                 if ($args{needs_update}) {
                     next unless version->parse($v) <  version->parse($_->{dist_version});
                 } else {
