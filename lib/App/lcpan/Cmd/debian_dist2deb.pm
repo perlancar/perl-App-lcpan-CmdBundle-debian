@@ -41,19 +41,19 @@ _
         },
         exists_on_debian => {
             summary => 'Only output debs which exist on Debian repository',
-            'summary.alt.bool.neg' => 'Only output debs which do not exist on Debian repository',
+            'summary.alt.bool.not' => 'Only output debs which do not exist on Debian repository',
             schema => 'bool*',
             tags => ['category:filtering'],
         },
         exists_on_cpan => {
             summary => 'Only output debs which exist in database',
-            'summary.alt.bool.neg' => 'Only output debs which do not exist in database',
+            'summary.alt.bool.not' => 'Only output debs which do not exist in database',
             schema => 'bool*',
             tags => ['category:filtering'],
         },
         needs_update => {
             summary => 'Only output debs which has smaller version than its CPAN counterpart',
-            'summary.alt.bool.neg' => 'Only output debs which has the same version as its CPAN counterpart',
+            'summary.alt.bool.not' => 'Only output debs which has the same version as its CPAN counterpart',
             schema => 'bool*',
             tags => ['category:filtering'],
         },
