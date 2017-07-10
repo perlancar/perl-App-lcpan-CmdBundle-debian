@@ -1,3 +1,13 @@
+0.007   2017-07-10 (PERLANCAR)
+
+	- No functional changes.
+
+	- Fix Rinci metadata: Used wrong attribute summary.alt.bool.neg
+	  instead of summary.alt.bool.not.
+
+	- Replace Log::Any with Log::ger.
+
+
 0.006   2017-01-20 (PERLANCAR)
 
 	- No functional changes.
