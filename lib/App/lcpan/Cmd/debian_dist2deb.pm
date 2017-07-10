@@ -6,7 +6,7 @@ package App::lcpan::Cmd::debian_dist2deb;
 use 5.010001;
 use strict;
 use warnings;
-use Log::Any::IfLOG '$log';
+use Log::ger;
 
 require App::lcpan;
 
