@@ -1,6 +1,8 @@
 package App::lcpan::Cmd::debian_dist2deb;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010001;
@@ -79,12 +81,12 @@ sub handle_cmd {
     {
         push @fields, "dist_version";
         my $sth = $dbh->prepare(
-            "SELECT name,version FROM dist WHERE is_latest AND name IN (".
+            "SELECT dist_name,dist_version FROM file WHERE is_latest_dist AND dist_name IN (".
                 join(",", map { $dbh->quote($_) } @{ $args{dists} }).")");
         $sth->execute;
         my %versions;
         while (my $row = $sth->fetchrow_hashref) {
-            $versions{$row->{name}} = $row->{version};
+            $versions{$row->{dist_name}} = $row->{dist_version};
         }
         for (0..$#rows) {
             $rows[$_]{dist_version} = $versions{$rows[$_]{dist}};
