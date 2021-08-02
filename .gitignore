@@ -2,3 +2,4 @@ App-lcpan-CmdBundle-debian-*
 .build
 *~
 nytprof*
+.DS_Store
